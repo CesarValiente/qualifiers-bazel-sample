@@ -1,42 +1,38 @@
-load("@rules_jvm_external//:defs.bzl", "artifact")
-load("@rules_android//android:rules.bzl", "android_library")
-load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_android_library")
+#--- We load the specific rules we want to use here:
+# - artifact (JVM) to get dependencies from an artifact feed.
+# - kotlin_android_library to build a kotlin android project.
 
+load("@rules_jvm_external//:defs.bzl", "artifact")
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_android_library")
 
 PACKAGE = "com.cesarvaliente.qualifiers"
 MANIFEST = "AndroidManifest.xml"
 
+#--- Used to build the Android resources ---#
 android_library(
-    name = "bazel_res",
+    name = "lib_res",
     custom_package = PACKAGE,
     manifest = MANIFEST,
     resource_files = glob(["res/**"]),
     enable_data_binding = False,
      deps = [
-            artifact("androidx.constraintlayout:constraintlayout"),
             artifact("com.google.android.material:material"),
         ],
 )
 
+#--- Used to build the Kotlin resources on top of the Android ones. ---#
 kt_android_library(
-    name = "bazel_kt",
+    name = "lib_kt",
     srcs = glob(["java/**/*.kt"]),
     deps = [
-        ":bazel_res",
+        ":lib_res",
         artifact("androidx.appcompat:appcompat"),
-        artifact("androidx.fragment:fragment"),
-        artifact("androidx.core:core"),
-        artifact("androidx.lifecycle:lifecycle-runtime"),
-        artifact("androidx.lifecycle:lifecycle-viewmodel"),
-        artifact("androidx.lifecycle:lifecycle-common"),
-        artifact("androidx.drawerlayout:drawerlayout"),
-        artifact("org.jetbrains.kotlinx:kotlinx-coroutines-core"),
-        artifact("org.jetbrains.kotlinx:kotlinx-coroutines-android"),
     ]
 )
 
+#--- We then make the binary with the resources we previously have built ----#
 android_binary(
-    name = "bazel",
+    name = "app",
     manifest = MANIFEST,
     custom_package = PACKAGE,
     manifest_values = {
@@ -46,8 +42,7 @@ android_binary(
         "targetSdkVersion": "29",
     },
     deps = [
-        ":bazel_res",
-        ":bazel_kt",
-        artifact("androidx.appcompat:appcompat"),
+        ":lib_res",
+        ":lib_kt",
     ],
 )
